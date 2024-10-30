@@ -46,7 +46,7 @@
       );
     }
 
-    const App = ({ images, visibleItems, finishedItems }) => {
+    const App = ({ images = [], visibleItems = [], finishedItems = [] }) => {
       return (
         <section className="game container">
           <Grid images={images} visibleItems={visibleItems} finishedItems={finishedItems} />

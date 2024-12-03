@@ -17,41 +17,65 @@
     root.render(<App images={images}/>);
 
     function App({images = []}) {
+      const [stepsCount, setStepsCount] = React.useState(0);
+
+      const changeStepsCount = () => {
+        setStepsCount(stepsCount + 1);
+      }
       // TODO: добавьте состояние для счётчика шагов
       return (
         <section className="game container">
-          <div className="steps">Шаг {42}</div>
-          <Grid images={images}/>
+          <div className="steps">Шаг {stepsCount}</div>
+          <Grid images={images} changeStepsCount={changeStepsCount}/>
         </section>
       );
     }
 
-    function Grid({images = [], visibleItems = [], finishedItems = []}) {
+    function Grid({images = [], finishedItems = [], changeStepsCount}) {
+      finishedItems = [];
+
+      const [visibleItems, setVisibleItems] = React.useState([]);
+
+      const onCardClick = (id) => {
+        if (visibleItems.includes(id) || finishedItems.includes(id)) {
+          return
+        } else {
+          setVisibleItems([...visibleItems, id]);
+          changeStepsCount();
+        }
+      };
       // TODO: добавьте состояние списка открытых карточек
       return (
         <ul className="cards">
           {images.map((item) => (
             <Card
+              id={item.id}
               key={item.id}
               url={item.url}
               description={item.description}
               isVisible={visibleItems.includes(item.id)}
               isFinished={finishedItems.includes(item.id)}
+              onCardClick={onCardClick}
             />
           ))}
         </ul>
       );
     }
 
-    function Card({url, description, isVisible, isFinished}) {
+    function Card({id, url, description, isVisible, isFinished, onCardClick}) {
       // TODO: добавьте обработку события
       const className = `${
         isVisible ? 'card-show' : ''
       } ${
         isFinished ? 'card-finished' : ''
       }`;
+
+      const handleClick = () => {
+        onCardClick(id);
+      };
+
       return (
-        <li className={`card ${className}`}>
+        <li className={`card ${className}`} onClick={handleClick}>
           <img
             width="204" height="144"
             src={url}

@@ -8,6 +8,8 @@
   <script src="vendor/react-dom.development.js"></script>
   <script src="vendor/babel.min.js"></script>
   <script src="data.js"></script>
+  <!-- Файл для настроек приложения -->
+  <script src="settings.js"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -17,53 +19,58 @@
     root.render(<App images={images}/>);
 
     function App({images = []}) {
+      const finishedItems = [];
       const [stepsCount, setStepsCount] = React.useState(0);
+      // TODO: добавьте состояние для угаданных пар карточек
+      const checkItems = () => {
+        // TODO: реализуйте сравнение карточек в паре
+        setStepsCount((i) => i + 1);
+      };
 
-      const changeStepsCount = () => {
-        setStepsCount(stepsCount + 1);
-      }
-      // TODO: добавьте состояние для счётчика шагов
       return (
         <section className="game container">
+          {/* TODO: отобразите прогресс игры */}
           <div className="steps">Шаг {stepsCount}</div>
-          <Grid images={images} changeStepsCount={changeStepsCount}/>
+          <Grid
+            images={images}
+            finishedItems={finishedItems}
+            checkItems={checkItems}
+          />
+          {/* TODO% отобразите модальное окно при победе */}
         </section>
       );
     }
 
-    function Grid({images = [], finishedItems = [], changeStepsCount}) {
-      finishedItems = [];
-
+    function Grid({images = [], finishedItems, checkItems}) {
       const [visibleItems, setVisibleItems] = React.useState([]);
 
-      const onCardClick = (id) => {
-        if (visibleItems.includes(id) || finishedItems.includes(id)) {
-          return
-        } else {
-          setVisibleItems([...visibleItems, id]);
-          changeStepsCount();
+      const handleCardClick = (id) => {
+        if (finishedItems.includes(id) || visibleItems.includes(id)) {
+          return;
         }
+        // TODO: напишите логику выбора пары карточек для сравнения
+        checkItems();
+        setVisibleItems((items) => [...items, id]);
       };
-      // TODO: добавьте состояние списка открытых карточек
+
       return (
         <ul className="cards">
           {images.map((item) => (
             <Card
-              id={item.id}
               key={item.id}
+              id={item.id}
               url={item.url}
               description={item.description}
               isVisible={visibleItems.includes(item.id)}
               isFinished={finishedItems.includes(item.id)}
-              onCardClick={onCardClick}
+              onCardClick={handleCardClick}
             />
           ))}
         </ul>
       );
     }
 
-    function Card({id, url, description, isVisible, isFinished, onCardClick}) {
-      // TODO: добавьте обработку события
+    function Card({url, description, id, isVisible, isFinished, onCardClick}) {
       const className = `${
         isVisible ? 'card-show' : ''
       } ${
@@ -75,7 +82,7 @@
       };
 
       return (
-        <li className={`card ${className}`} onClick={handleClick}>
+        <li onClick={handleClick} className={`card ${className}`}>
           <img
             width="204" height="144"
             src={url}

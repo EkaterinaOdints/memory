@@ -19,38 +19,85 @@
     root.render(<App images={images}/>);
 
     function App({images = []}) {
-      const finishedItems = [];
       const [stepsCount, setStepsCount] = React.useState(0);
+      const [finishedItems, setFinishedItems] = React.useState([]);
+
+      const handleButtonClick = () => {
+        setFinishedItems([]);
+        setStepsCount(0);
+      }
+
       // TODO: добавьте состояние для угаданных пар карточек
-      const checkItems = () => {
-        // TODO: реализуйте сравнение карточек в паре
+      const checkItems = (firstId, secondId) => {
         setStepsCount((i) => i + 1);
+        const firstCard = images.find((card) => card.id === firstId);
+        const secondCard = images.find((card) => card.id === secondId);
+
+        if (firstCard.url === secondCard.url) {
+          setFinishedItems([...finishedItems, firstId, secondId]);
+        } 
+        // TODO: реализуйте сравнение карточек в паре
       };
 
       return (
-        <section className="game container">
-          {/* TODO: отобразите прогресс игры */}
-          <div className="steps">Шаг {stepsCount}</div>
-          <Grid
-            images={images}
+        <>
+          <section className="game container">
+            {/* TODO: отобразите прогресс игры */}
+            <Progress finishedItems={finishedItems} />
+            <div className="steps">Шаг {stepsCount}</div>
+            <Grid
+              images={images}
+              finishedItems={finishedItems}
+              checkItems={checkItems}
+            />
+            {/* TODO% отобразите модальное окно при победе */}
+          </section>
+          <Modal 
+            stepsCount={stepsCount}
             finishedItems={finishedItems}
-            checkItems={checkItems}
+            handleButtonClick={handleButtonClick} 
           />
-          {/* TODO% отобразите модальное окно при победе */}
-        </section>
+        </>
       );
     }
 
+    function Progress({finishedItems}) {
+      const progressCount = finishedItems.length / 2;
+      const couplesCount = images.length / 2;
+
+      return (
+        <>
+          <div className="progress-wrapper">
+            <div className="progress" style={{width: `${progressCount / couplesCount * 100}%`}}/>
+          </div>
+          <p className="progress-description">Открыто <span>{progressCount}</span> / <span>{couplesCount}</span></p>
+        </>
+      );
+    };
+
     function Grid({images = [], finishedItems, checkItems}) {
       const [visibleItems, setVisibleItems] = React.useState([]);
-
+      
       const handleCardClick = (id) => {
         if (finishedItems.includes(id) || visibleItems.includes(id)) {
           return;
         }
+
+        switch(visibleItems.length) {
+          case 0: 
+            setVisibleItems((items) => [...items, id]);
+            break;
+          case 1: 
+            setVisibleItems((items) => [...items, id]);
+            checkItems(...visibleItems, id);
+            setTimeout(() => {
+              setVisibleItems([]);
+            }, TIMEOUT);
+            break;
+          default: 
+          setVisibleItems([]);
+        }
         // TODO: напишите логику выбора пары карточек для сравнения
-        checkItems();
-        setVisibleItems((items) => [...items, id]);
       };
 
       return (
@@ -91,6 +138,21 @@
         </li>
       );
     }
+
+    function Modal({stepsCount, finishedItems, handleButtonClick}) {
+      if (finishedItems.length === images.length) {
+        return (
+        <div className="modal">
+          <div className="modal-box">
+            <h3 className="modal-caption">Победа!</h3>
+            <p className="modal-description">Вы собрали все пары за {stepsCount} шагов</p>
+            <button className="button modal-button" type="button" onClick={handleButtonClick}>Новая игра</button>
+          </div>
+        </div>
+        );
+      }
+    }
+
   </script>
 </body>
 </html>

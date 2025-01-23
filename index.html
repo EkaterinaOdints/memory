@@ -15,58 +15,71 @@
   <script type="text/babel">
     const container = document.getElementById('root');
     const root = ReactDOM.createRoot(container);
-    root.render(<App images={images} results={results}/>);
+    root.render(<App items={images} final={results}/>);
 
-    function App({images = [], results = []}) {
-      // TODO: добавьте состояние для хранения текущего результата
-      // TODO: добавьте состояние для хранения страницы приложения
-      // TODO: добавьте логику переключения страницы приложения
-
-      return (
-        <GamePage images={images}/>
-      );
+    function App({items, final}) {
+      return renderPage(items, final);
     }
-    const useGame = (images) => {
+
+    function renderPage(items, final) {
+      const [page, setPage] = React.useState(AppRoute.Game);
+      const [result, setResult] = React.useState(0);
+
+      switch(page) {
+        case 'game':
+          return <GamePage items={items} setPage={setPage} setResult={setResult}/>;
+
+        case 'results':
+          return <ResultsPage final={final} setPage={setPage} currentResult={result}/>;
+
+        return null;
+      }
+    }
+
+    const useGame = (items) => {
       const [finishedItems, setFinishedItems] = React.useState([]);
       const [stepsCount, setStepsCount] = React.useState(0);
 
-      const checkItems = (firstItem, secondItem) => {
-        const firstImage = images.find(({id}) => id === firstItem);
-        const secondImage = images.find(({id}) => id === secondItem);
+      const checkItems = (firstItemId, secondItemId) => {
+        const firstImage = items.find(({id}) => id === firstItemId);
+        const secondImage = items.find(({id}) => id === secondItemId);
+
         if (firstImage.url === secondImage.url) {
-          setFinishedItems((items) => [...items, firstItem, secondItem]);
+          setFinishedItems([...finishedItems, firstItemId, secondItemId]);
         }
-        setStepsCount((i) => i + 1);
+
+        setStepsCount(stepsCount + 1);
       };
 
-      const isWin = finishedItems.length > 0 && finishedItems.length === images.length;
+      const isWin = finishedItems.length > 0 && finishedItems.length === items.length;
 
       return {
         finishedItems,
         stepsCount,
         checkItems,
         isWin
-      };
+      }
     };
 
-    function GamePage({images = []}) {
+    function GamePage({items, setPage, setResult}) {
       const {
         finishedItems,
-        stepsCount,
         checkItems,
-        isWin
-      } = useGame(images);
+        stepsCount,
+        isWin,
+      } = useGame(items);
 
       const handleResultsClick = () => {
-        // TODO: передайте сообщение родительскому компоненту
+        setPage(AppRoute.Results);
+        setResult(stepsCount);
       };
 
       return (
         <section className="game container">
-          <Progress value={finishedItems.length / 2} max={images.length / 2} />
+          <Progress value={finishedItems.length / 2} max={items.length / 2} />
           <div className="steps">Шаг {stepsCount}</div>
           <Grid
-            images={images}
+            items={items}
             finishedItems={finishedItems}
             checkItems={checkItems}
           />
@@ -77,9 +90,8 @@
               <button className="button modal-button" type="button" onClick={handleResultsClick}>Показать результаты</button>
             </Modal>
           )}
-        </section>
-      );
-    }
+        </section>);
+      }
 
     function Progress({value, max}) {
       return (
@@ -102,7 +114,7 @@
       );
     }
 
-    function Grid({images = [], finishedItems, checkItems}) {
+    function Grid({items = [], finishedItems, checkItems}) {
       const [visibleItems, setVisibleItems] = React.useState([]);
 
       const handleCardClick = (id) => {
@@ -115,7 +127,7 @@
             setVisibleItems([id]);
             break;
           case 1:
-            setVisibleItems((items) => [...items, id]);
+            setVisibleItems([...visibleItems, id]);
             checkItems(visibleItems[0], id);
             setTimeout(() => {
               setVisibleItems([]);
@@ -128,7 +140,7 @@
 
       return (
         <ul className="cards">
-          {images.map((item) => (
+          {items.map((item) => (
             <Card
               key={item.id}
               item={item}
@@ -164,10 +176,38 @@
       );
     }
 
-    function ResultsPage() {
+    function ResultsPage({final, setPage, currentResult = 0}) {
+      const sortedResults = [...final, {name: CURRENT_NAME, stepsCount: currentResult}].sort((a, b) => a.stepsCount - b.stepsCount);
+      const resultsTable = sortedResults.map(({name, stepsCount}, index) => (
+        <tr key={name} className={`result-table-row ${stepsCount === currentResult ? "active" : ""}`}>
+          <td>{index+1}</td>
+          <td>{name}</td>
+          <td>{stepsCount}</td>
+        </tr>
+      ))
+
+      const handleGameClick = () => {
+        setPage(AppRoute.Game);
+      }
+
       return (
         <section className="result container">
-          {/* TODO: отрисуйте страницу результата из шаблона */}
+          <h2>Лучшие результаты:</h2>
+          <p>Вы завершили игру за <b>{currentResult} шагов</b>, так держать!</p>
+          <table className="result-table">
+            <thead>
+            <tr className="result-table-row">
+              <th>Место</th>
+              <th>Имя</th>
+              <th>Шаги</th>
+            </tr>
+            </thead>
+            <tbody>
+              {resultsTable}
+            </tbody>
+          </table>
+          <p>Хотите попробовать ещё раз?</p>
+          <button className="button result-button" type="button" onClick={handleGameClick}>Новая игра</button>
         </section>
       );
     }

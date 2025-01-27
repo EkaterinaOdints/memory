@@ -1,7 +1,7 @@
-const TIMEOUT = 900;
-const CURRENT_NAME = "Ваш результат";
-
 const AppRoute = {
-    Game: 'game',
-    Results: 'results'
+  Game: 'game',
+  Results: 'results',
 };
+
+const TIMEOUT = 900;
+const RANDOMIZED = false;

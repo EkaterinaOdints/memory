@@ -18,22 +18,31 @@
     const root = ReactDOM.createRoot(container);
     root.render(<App getImages={getImages} results={results}/>);
 
-    function App({results, getImages, images = getImages() }) {
-      const [page, setPage] = React.useState(AppRoute.Game);
+    function App({results, getImages, images = []}) {
+      const [page, setPage] = React.useState(AppRoute.Initial);
       const [result, setResult] = React.useState(0);
-      // TODO: добавьте состояние текущего набора карточек
+      const [type, setType] = React.useState('cats');
 
       const showResults = (stepsCount) => {
         setResult(stepsCount);
         setPage(AppRoute.Results);
       };
       const handleReset = () => {
+        setPage(AppRoute.Initial);
+      };
+
+      const startGame = () => {
         setPage(AppRoute.Game);
       };
+
       const getPage = (route) => {
+        images = getImages(type)
+
         switch (route) {
+          case AppRoute.Initial:
+            return <InitialPage startGame={startGame} setType={setType} />;
           case AppRoute.Game:
-            return <GamePage images={images} onShowResults={showResults} />;
+            return <GamePage type={type} images={images} onShowResults={showResults} />;
           case AppRoute.Results:
             return (
               <ResultsPage
@@ -72,7 +81,7 @@
       };
     };
 
-    function GamePage({images = [], onShowResults}) {
+    function GamePage({type, images = [], onShowResults}) {
       const {
         finishedItems,
         stepsCount,
@@ -89,6 +98,7 @@
           <Progress value={finishedItems.length / 2} max={images.length / 2} />
           <div className="steps">Шаг {stepsCount}</div>
           <Grid
+            type={type}
             images={images}
             finishedItems={finishedItems}
             checkItems={checkItems}
@@ -125,7 +135,7 @@
       );
     }
 
-    function Grid({images = [], finishedItems, checkItems}) {
+    function Grid({type, images = [], finishedItems, checkItems}) {
       const [visibleItems, setVisibleItems] = React.useState([]);
 
       const handleCardClick = (id) => {
@@ -151,7 +161,7 @@
 
       return (
         // TODO: добавьте класс списку для смены рубашки карточек
-        <ul className="cards">
+        <ul className={`cards cards-theme-${type}`}>
           {images.map((item) => (
             <Card
               key={item.id}
@@ -189,11 +199,10 @@
     }
 
     function ResultsPage({ stepsCount, results, onResetGame }) {
-      // TODO: примените getDeclension для правильного склонения числа шагов
       return (
         <section className="result container">
           <h2>Лучшие результаты:</h2>
-          <p>Вы завершили игру за <b>{stepsCount} шагов</b>, так держать!</p>
+          <p>Вы завершили игру за <b>{getDeclension({ count: stepsCount, one: 'шаг', few: 'шага', many: 'шагов' })}</b>, так держать!</p>
           <ResultsTable current={stepsCount} results={results} />
           <p>Хотите попробовать ещё раз?</p>
           <button onClick={onResetGame} className="button result-button" type="button">Новая игра</button>
@@ -226,10 +235,45 @@
       );
     }
 
-    function InitialPage() {
+    function TypeButtonList({onTypeButtonClick}) {
+      return (
+        <React.Fragment>
+          {
+            ButtonTypes.map((item) => (
+              <button
+                className={`ico-button ico-button-${item.type}`}
+                id={item.type}
+                key={item.type}
+                type="button"
+                onClick={onTypeButtonClick}
+              >
+                {item.label}
+              </button>
+            ))
+          }
+        </React.Fragment>
+      )
+    };
+
+    function InitialPage({startGame, setType}) {
+      const onTypeButtonClick = (evt) => {
+        setType(evt.target.id);
+        startGame();
+      }
+
       return (
         <section className="rules container">
-          {/* TODO: отрисуйте начальную страницу из шаблона */}
+          <h2>Добро пожаловать!</h2>
+          <p>Memory — игра для тренировки визуальной памяти</p>
+          <div className="rules-panel">
+            <h3>Правила игры</h3>
+            <ul className="rules-list">
+              <li>В наборе есть множество карточек – по две штуки с одним и тем же рисунком.</li>
+              <li>Нужно разложить карточки «рубашкой» вверх на столе, а затем переворачивать по две.</li>
+              <li>Если они совпадают – игрок забирает их и получает ещё один ход.</li>
+            </ul>
+          </div>
+          <TypeButtonList onTypeButtonClick={onTypeButtonClick} />
         </section>
       );
     }

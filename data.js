@@ -87,7 +87,11 @@ const results = [
 ];
 
 const getImages = (type) => {
-  // TODO: напишите код для формирования тематического набора данных
-  // TODO: напишите код для перемешивания данных
-  return [];
+  const cards = structuredClone(imageCollection[type]);
+  const dublCards = structuredClone(cards);
+  dublCards.forEach((item, index) => {
+    item.id = item.id + (index + 1);
+  });
+  cards.push(...dublCards);
+  return (RANDOMIZED ? cards.sort(() => Math.random() - 0.5) : cards);
 };
